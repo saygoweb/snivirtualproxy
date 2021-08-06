@@ -8,7 +8,9 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"gopkg.in/yaml.v2"
 )
@@ -57,22 +59,51 @@ func (config *Config) readConfig() {
 	}
 }
 
-func startLogger() {
-	file, err := os.OpenFile(config.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0660)
+var logFile *os.File
+
+func loggerStart() {
+	logFile, err := os.OpenFile(config.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0660)
 	if err != nil {
 		log.Fatalf("Cannot open logfile '%s': %v", config.LogFile, err)
 	}
-	InfoLogger = log.New(file, "INFO:  ", log.Ldate|log.Ltime)
-	WarningLogger = log.New(file, "WARN:  ", log.Ldate|log.Ltime)
-	ErrorLogger = log.New(file, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
-	DebugLogger = log.New(file, "DEBUG: ", log.Ldate|log.Ltime|log.Lshortfile)
+	InfoLogger = log.New(logFile, "INFO:  ", log.Ldate|log.Ltime)
+	WarningLogger = log.New(logFile, "WARN:  ", log.Ldate|log.Ltime)
+	ErrorLogger = log.New(logFile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	DebugLogger = log.New(logFile, "DEBUG: ", log.Ldate|log.Ltime|log.Lshortfile)
+}
+
+func loggerReopen() {
+	logFile.Close()
+	logFile, err := os.OpenFile(config.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0660)
+	if err != nil {
+		log.Printf("Cannot open logfile '%s': %v", config.LogFile, err)
+	}
+	InfoLogger.SetOutput(logFile)
+	WarningLogger.SetOutput(logFile)
+	ErrorLogger.SetOutput(logFile)
+	DebugLogger.SetOutput(logFile)
+
+	InfoLogger.Println("Log file refresh")
 }
 
 func main() {
 	log.SetFlags(log.Lshortfile)
 	config.readConfig()
-	startLogger()
+	loggerStart()
 	InfoLogger.Printf("snivirtualproxy starting ...")
+
+	// Signal Handling
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	go func() {
+		sig := <-signals
+		log.Printf("Caught %s", sig)
+		if sig == syscall.SIGHUP {
+			loggerReopen()
+		} else if sig == syscall.SIGINT || sig == syscall.SIGTERM {
+			InfoLogger.Fatalf("snivirtualproxy terminated by %s", sig)
+		}
+	}()
 
 	tlsConfig := &tls.Config{
 		GetCertificate: returnCert,
