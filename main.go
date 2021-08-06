@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -14,6 +15,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 )
+
+const version = "1.0.0"
 
 type Config struct {
 	LogFile string
@@ -90,7 +93,8 @@ func main() {
 	log.SetFlags(log.Lshortfile)
 	config.readConfig()
 	loggerStart()
-	InfoLogger.Printf("snivirtualproxy starting ...")
+	fmt.Printf("snivirtualproxy v%s\n", version)
+	InfoLogger.Printf("snivirtualproxy %s starting ...", version)
 
 	// Signal Handling
 	signals := make(chan os.Signal, 1)
