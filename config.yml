@@ -1,0 +1,9 @@
+logfile: './snivirtualproxy.log'
+
+server:
+  bind: ":8453"
+  upstreamurl: "http://localhost:8890"
+
+ssl:
+  certificate: "/etc/letsencrypt/live/$(SNI_SERVER_NAME)/cert.pem"
+  key: "/etc/letsencrypt/live/$(SNI_SERVER_NAME)/privkey.pem"
