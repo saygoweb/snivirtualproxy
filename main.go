@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -19,8 +20,9 @@ import (
 const version = "1.0.0"
 
 type Config struct {
-	LogFile string
-	Server  struct {
+	ConfigFile string
+	LogFile    string
+	Server     struct {
 		Bind        string
 		UpstreamUrl string
 	}
@@ -48,18 +50,25 @@ func fileExists(filePath string) bool {
 }
 
 func (config *Config) readConfig() {
-	configFilePath := "/etc/snivirtualproxy/config.yml"
-	if fileExists("./config.yml") {
-		configFilePath = "./config.yml"
+	configFilePath := flag.String("config", "/etc/snivirtualproxy/config.yml", "Configuration file")
+	showVersion := flag.Bool("version", false, "Display version and exit")
+	flag.Parse()
+	if *showVersion {
+		fmt.Printf("Version: %s\n", version)
+		os.Exit(0)
 	}
-	configContent, err := ioutil.ReadFile(configFilePath)
+	if !fileExists(*configFilePath) {
+		ErrorLogger.Fatalf("Cannot find config file '%s'", *configFilePath)
+	}
+	configContent, err := ioutil.ReadFile(*configFilePath)
 	if err != nil {
-		log.Fatalf("Cannot read config from '%s': %v", configFilePath, err)
+		log.Fatalf("Cannot read config from '%s': %v", *configFilePath, err)
 	}
 	err = yaml.Unmarshal(configContent, config)
 	if err != nil {
-		log.Fatalf("Cannot parse config from '%s': %v", configFilePath, err)
+		log.Fatalf("Cannot parse config from '%s': %v", *configFilePath, err)
 	}
+	config.ConfigFile = *configFilePath
 }
 
 var logFile *os.File
@@ -95,6 +104,7 @@ func main() {
 	loggerStart()
 	fmt.Printf("snivirtualproxy v%s\n", version)
 	InfoLogger.Printf("snivirtualproxy %s starting ...", version)
+	InfoLogger.Printf("with config %s", config.ConfigFile)
 
 	// Signal Handling
 	signals := make(chan os.Signal, 1)
