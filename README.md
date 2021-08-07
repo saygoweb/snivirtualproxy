@@ -1,5 +1,5 @@
 # SNI Virtual Proxy
-A server that provides named virtual SSL servers for based on the servername given via SNI.
+A server that provides 'lazy loaded' named virtual SSL servers based on the servername given via SNI.
 
 ## How it Works
 
@@ -21,4 +21,24 @@ server:
 ssl:
   certificate: "/etc/letsencrypt/live/$(SNI_SERVER_NAME)/cert.pem"
   key: "/etc/letsencrypt/live/$(SNI_SERVER_NAME)/privkey.pem"
+```
+
+## Commandline Usage
+
+```yaml
+Usage of snivirtualproxy:
+  -config string
+        Configuration file (default "/etc/snivirtualproxy/config.yml")
+  -version
+        Display version and exit
+```
+
+## Installation
+- Copy the binary `snivirtualproxy` to `/usr/local/sbin`
+- Copy the `config/snivirtualproxy.service` to `/etc/systemd/system/`
+- Create a configuration file in `/etc/snivirtualproxy/config.yml`. See this [example](config.yml) for details.
+
+Start the snivirtualproxy service
+```
+systemctl start snivirtualproxy
 ```

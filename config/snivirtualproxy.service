@@ -1,0 +1,8 @@
+[Unit]
+Description=SNI Virtual Proxy
+
+[Service]
+ExecStart=/usr/local/sbin/snivirtualproxy
+
+[Install]
+WantedBy=multi-user.target
