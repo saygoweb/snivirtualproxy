@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -17,7 +16,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const version = "1.1.0"
+const version = "1.1.1"
 
 type Config struct {
 	ConfigFile string
@@ -52,15 +51,15 @@ func fileExists(filePath string) bool {
 func (config *Config) readConfig() {
 	configFilePath := flag.String("config", "/etc/snivirtualproxy/config.yml", "Configuration file")
 	showVersion := flag.Bool("version", false, "Display version and exit")
-	flag.Parse()
+	flag.Parse() // Ensure flag.Parse() is called before dereferencing configFilePath
 	if *showVersion {
 		fmt.Printf("Version: %s\n", version)
 		os.Exit(0)
 	}
-	if !fileExists(*configFilePath) {
-		ErrorLogger.Fatalf("Cannot find config file '%s'", *configFilePath)
+	if configFilePath == nil || !fileExists(*configFilePath) {
+		log.Fatalf("Cannot find config file '%s'", *configFilePath)
 	}
-	configContent, err := ioutil.ReadFile(*configFilePath)
+	configContent, err := os.ReadFile(*configFilePath)
 	if err != nil {
 		log.Fatalf("Cannot read config from '%s': %v", *configFilePath, err)
 	}
