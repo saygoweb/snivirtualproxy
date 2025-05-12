@@ -16,7 +16,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const version = "1.1.1"
+const version = "1.2.0"
 
 type Config struct {
 	ConfigFile string
@@ -140,6 +140,13 @@ func main() {
 		req.URL.Scheme = url.Scheme
 		req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
 		req.Host = url.Host
+
+		// Add the original client IP to the X-Forwarded-For header
+		clientIP := req.RemoteAddr
+		if prior, ok := req.Header["X-Forwarded-For"]; ok {
+			clientIP = strings.Join(prior, ", ") + ", " + clientIP
+		}
+		req.Header.Set("X-Forwarded-For", clientIP)
 
 		// Note that ServeHttp is non blocking and uses a go routine under the hood
 		proxy.ServeHTTP(res, req)
