@@ -158,7 +158,11 @@ func main() {
 }
 
 func returnCert(helloInfo *tls.ClientHelloInfo) (*tls.Certificate, error) {
-	InfoLogger.Printf("SNI %s", helloInfo.ServerName)
+	ip := helloInfo.Conn.RemoteAddr().String()
+	if strings.Contains(ip, ":") {
+		ip = strings.Split(ip, ":")[0]
+	}
+	InfoLogger.Printf("SNI req %s for %s", ip, helloInfo.ServerName)
 
 	// templateCertificate := "/etc/letsencrypt/live/$(SNI_SERVER_NAME)/cert.pem"
 	// templateKey := "/etc/letsencrypt/live/$(SNI_SERVER_NAME)/privkey.pem"
