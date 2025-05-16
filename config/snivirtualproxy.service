@@ -1,8 +1,10 @@
 [Unit]
 Description=SNI Virtual Proxy
+After=network.target
 
 [Service]
 ExecStart=/usr/local/sbin/snivirtualproxy
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
