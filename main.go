@@ -157,6 +157,20 @@ func main() {
 	InfoLogger.Println("snivirtualproxy shutdown")
 }
 
+// certPathsForSNI resolves cert and key file paths for the given SNI server name.
+// If the cert file does not exist and the server name has a "www." prefix, it falls
+// back to the bare domain name (e.g. "www.example.com" → "example.com").
+func certPathsForSNI(serverName string) (string, string) {
+	certPath := strings.Replace(config.Ssl.Certificate, "$(SNI_SERVER_NAME)", serverName, -1)
+	keyPath := strings.Replace(config.Ssl.Key, "$(SNI_SERVER_NAME)", serverName, -1)
+	if !fileExists(certPath) && strings.HasPrefix(serverName, "www.") {
+		baseName := serverName[4:]
+		certPath = strings.Replace(config.Ssl.Certificate, "$(SNI_SERVER_NAME)", baseName, -1)
+		keyPath = strings.Replace(config.Ssl.Key, "$(SNI_SERVER_NAME)", baseName, -1)
+	}
+	return certPath, keyPath
+}
+
 func returnCert(helloInfo *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	ip := helloInfo.Conn.RemoteAddr().String()
 	if strings.Contains(ip, ":") {
@@ -164,13 +178,7 @@ func returnCert(helloInfo *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	}
 	InfoLogger.Printf("SNI req %s for %s", ip, helloInfo.ServerName)
 
-	// templateCertificate := "/etc/letsencrypt/live/$(SNI_SERVER_NAME)/cert.pem"
-	// templateKey := "/etc/letsencrypt/live/$(SNI_SERVER_NAME)/privkey.pem"
-	templateCertificate := config.Ssl.Certificate
-	templateKey := config.Ssl.Key
-
-	certificateFilePath := strings.Replace(templateCertificate, "$(SNI_SERVER_NAME)", helloInfo.ServerName, -1)
-	keyFilePath := strings.Replace(templateKey, "$(SNI_SERVER_NAME)", helloInfo.ServerName, -1)
+	certificateFilePath, keyFilePath := certPathsForSNI(helloInfo.ServerName)
 
 	certificate, err := tls.LoadX509KeyPair(certificateFilePath, keyFilePath)
 	if err != nil {
