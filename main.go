@@ -16,7 +16,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const version = "1.2.1"
+const version = "1.2.2"
 
 type Config struct {
 	ConfigFile string
