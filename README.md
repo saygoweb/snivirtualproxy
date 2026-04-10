@@ -34,11 +34,38 @@ Usage of snivirtualproxy:
 ```
 
 ## Installation
-- Copy the binary `snivirtualproxy` to `/usr/local/sbin`
-- Copy the `config/snivirtualproxy.service` to `/etc/systemd/system/`
-- Create a configuration file in `/etc/snivirtualproxy/config.yml`. See this [example](config.yml) for details.
 
-Start the snivirtualproxy service
+### Automated (recommended)
+
+Run the setup script from the repository root:
+
+```bash
+sudo bash deploy/setup.sh
 ```
-systemctl start snivirtualproxy
+
+Options:
+
+| Flag | Description |
+|------|-------------|
+| `--no-start` | Install and enable the service but do not start it |
+| `--no-enable` | Install but do not enable or start the service |
+| `--sample-config` | Overwrite an existing config with the sample (backs up first) |
+
+The script will:
+1. Install Go if not present
+2. Build and install the binary to `/usr/local/sbin/snivirtualproxy`
+3. Create `/etc/snivirtualproxy/config.yml` (if it doesn't exist)
+4. Install and enable the systemd service
+
+### Manual
+
+- Build: `go build -o snivirtualproxy .`
+- Copy the binary to `/usr/local/sbin/snivirtualproxy`
+- Copy `deploy/snivirtualproxy.service` to `/etc/systemd/system/`
+- Create `/etc/snivirtualproxy/config.yml` — see [config.yml](config.yml) for an example
+- Reload and start:
+
+```bash
+systemctl daemon-reload
+systemctl enable --now snivirtualproxy
 ```

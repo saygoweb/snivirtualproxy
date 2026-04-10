@@ -1,0 +1,22 @@
+[Unit]
+Description=SNI Virtual Proxy
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/snivirtualproxy --config /etc/snivirtualproxy/config.yml
+Restart=on-failure
+RestartSec=2s
+
+# Allow log rotation via SIGHUP
+KillSignal=SIGTERM
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/log
+
+[Install]
+WantedBy=multi-user.target
