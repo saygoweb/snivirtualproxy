@@ -138,7 +138,7 @@ func main() {
 		// Update the headers to allow for SSL redirection
 		req.URL.Host = url.Host
 		req.URL.Scheme = url.Scheme
-		req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
+		req.Header.Set("X-Forwarded-Host", req.Host)
 		req.Host = url.Host
 
 		// Add the original client IP to the X-Forwarded-For header
